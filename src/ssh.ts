@@ -43,28 +43,29 @@ class SSH {
   private exec(command: string) {
     const res = [];
     return new Promise<string[]>((resolve, reject) => {
-      this.getConn().then(conn => {
-        conn.exec(command, (err, stream) => {
-          if (err) reject(err);
-          stream.on('data', data => res.push(data.toString('utf8')));
-          stream.on('close', (code, signal) => {
-            log(
-              `Stream closed, code: ${code}, signal: ${signal}`,
-              LogType.Info
-            );
-            conn.end();
-            resolve(res);
+      this.getConn()
+        .then(conn => {
+          conn.exec(command, (err, stream) => {
+            if (err) reject(err);
+            stream.on('data', data => log(data.toString('utf-8')));
+            stream.on('close', (code, signal) => {
+              log(
+                `Stream closed, code: ${code}, signal: ${signal}`,
+                LogType.Info
+              );
+              conn.end();
+              resolve(res);
+            });
+            stream.stderr.on('data', data => reject(data.toString('utf8')));
           });
-          stream.stderr.on('data', data => reject(data.toString('utf8')));
-        });
-      });
+        })
+        .catch(e => reject(e));
     });
   }
 
-  async sendSSHCommand(command: string) {
+  async sendCommands(commands: string[]) {
     try {
-      const res = await this.exec(command);
-      log(res.join('\n'));
+      await this.exec(commands.join(' && '));
     } catch (e) {
       log(e, LogType.Error);
     }
