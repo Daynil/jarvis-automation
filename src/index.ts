@@ -1,3 +1,4 @@
 #!/usr/bin/env node
-require('dotenv').load();
+const path = require('path');
+require('dotenv').load({ path: path.join(__dirname, '..', '.env') });
 require('./jarvis');
