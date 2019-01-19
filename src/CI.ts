@@ -25,7 +25,7 @@ const apps = [
   {
     name: 'dlibin-api',
     dir: './dlibin-api',
-    buildCommand: 'build-prod',
+    buildCommand: 'build:prod',
     entry: ''
   },
   {

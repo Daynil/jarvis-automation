@@ -65,6 +65,7 @@ class SSH {
 
   async sendCommands(commands: string[]) {
     try {
+      console.log('commands sent: ', commands.join(' && '));
       await this.exec(commands.join(' && '));
     } catch (e) {
       log(e, LogType.Error);
