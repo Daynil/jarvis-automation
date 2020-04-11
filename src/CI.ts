@@ -1,3 +1,4 @@
+import inquirer from 'inquirer';
 import { keyInSelect } from 'readline-sync';
 
 export type app =
@@ -48,36 +49,42 @@ const apps = [
   }
 ];
 
-export function checkAppStatus() {
-  const index = keyInSelect(appNameList);
-
-  if (index < 0) return process.exit(0);
-
-  return [`pm2 show ${appNameList[index]}`];
+async function chooseApp() {
+  const ans = await inquirer.prompt([
+    {
+      type: 'list',
+      name: 'appName',
+      message: 'Choose app to check',
+      choices: appNameList
+    }
+  ]);
+  return apps.find((app) => app.name === ans.appName).name;
 }
 
-export function checkAppLogs(numLines?: number) {
-  const index = keyInSelect(appNameList);
+export async function checkAppStatus() {
+  const appName = await chooseApp();
 
-  if (index < 0) return process.exit(0);
-
-  return [`pm2 log ${appNameList[index]} --lines ${numLines}`];
+  return [`pm2 show ${appName}`];
 }
 
-export function restartApp(appName?: string) {
+export async function checkAppLogs(numLines?: number) {
+  const appName = await chooseApp();
+
+  return [`pm2 log ${appName} --lines ${numLines}`];
+}
+
+export async function restartApp(appName?: string) {
   if (appName) return [`pm2 restart ${appName}`];
-  const index = keyInSelect(appNameList);
+  const appNameSelected = await chooseApp();
 
-  if (index < 0) return process.exit(0);
-
-  return [`pm2 restart ${appNameList[index]}`];
+  return [`pm2 restart ${appNameSelected}`];
 }
 
-export function updateApp() {
+export async function updateApp(): Promise<string[]> {
   const index = keyInSelect(appNameList);
 
   if (index < 0) return process.exit(0);
-  const app = apps.find(app => app.name === appNameList[index]);
+  const app = apps.find((app) => app.name === appNameList[index]);
   const commandList = [];
 
   commandList.push(`cd ${app.dir}`);
@@ -85,5 +92,5 @@ export function updateApp() {
   commandList.push('npm install');
   commandList.push(`npm run ${app.buildCommand}`);
 
-  return [...commandList, ...restartApp(app.name)];
+  return [...commandList, ...(await restartApp(app.name))];
 }
