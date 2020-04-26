@@ -1,6 +1,7 @@
 //const exec = promisify(require("child_process").exec);
 import jarvis from 'commander';
 import inquirer from 'inquirer';
+import fetch from 'node-fetch';
 import { checkAppLogs, checkAppStatus, restartApp, updateApp } from './CI';
 import { log, LogType } from './logger';
 import { execShell } from './node-util';
@@ -37,6 +38,29 @@ jarvis
     // Starting explorer works, but hangs process for some reason
     // Wait for command to be issued and force process exit
     setInterval(() => process.exit(), 100);
+  });
+
+jarvis
+  .command('ping-firebase')
+  .description('Check status of firebase functions')
+  .action(async () => {
+    let res = await fetch(
+      'https://us-central1-dlibin-api-ca89a.cloudfunctions.net/ping'
+    );
+    const start = process.hrtime();
+    try {
+      res = await res.json();
+    } catch (e) {}
+    if (res.status === 200) {
+      const time = process.hrtime(start);
+      log(
+        `Systems green! Ping: ${time[0] * 1000 + time[1] / 1000000}ms`,
+        LogType.Success
+      );
+    } else {
+      log('System error', LogType.Error);
+      console.error(res);
+    }
   });
 
 jarvis
